@@ -1,0 +1,2541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幻情的mc小站 - 我的世界资源分享平台</title>
+    <!-- 外部资源引入 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4CAF50', // 我的世界主题绿
+                        secondary: '#8D6E63', // 木头棕色
+                        accent: '#FFC107', // 黄色强调色
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto { content-visibility: auto; }
+            .text-shadow { text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); }
+            .card-hover { transition: all 0.3s ease; }
+            .card-hover:hover { transform: translateY(-5px); }
+            .search-highlight { background-color: rgba(255, 255, 0, 0.3); font-weight: bold; }
+        }
+    </style>
+    
+    <style>
+        /* 平滑滚动 */
+        html { scroll-behavior: smooth; }
+        
+        /* 渐变背景 */
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.9) 0%, rgba(50, 120, 53, 0.95) 100%);
+        }
+        
+        /* 加载动画 */
+        .loader { border-top-color: #4CAF50; animation: spinner 0.6s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* 资源卡片悬停效果 */
+        .resource-card { transition: transform 0.3s ease; }
+        .resource-card:hover { transform: translateY(-5px); }
+        
+        /* 上传进度条动画 */
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+        .progress-animation { animation: progress 1.5s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <!-- 导航栏 -->
+    <header id="navbar" class="fixed w-full bg-white/90 backdrop-blur-sm shadow-md z-50 transition-all duration-300">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-cube text-primary text-3xl"></i>
+                <h1 class="text-2xl font-bold text-primary">幻情的mc小站</h1>
+            </div>
+            
+            <!-- 搜索框 - 桌面版 -->
+            <div class="hidden md:flex items-center flex-1 max-w-md mx-8">
+                <div class="relative w-full">
+                    <input type="text" id="search-input" placeholder="搜索材质包、地图、模组..." class="w-full py-2 px-4 pr-10 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50">
+                    <button id="search-button" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <nav class="flex items-center space-x-6">
+                <a href="#categories" class="hidden md:block hover:text-primary transition-colors">分类</a>
+                <a href="#new-uploads" class="hidden md:block hover:text-primary transition-colors">最新上传</a>
+                <a href="#popular" class="hidden md:block hover:text-primary transition-colors">热门资源</a>
+                <a href="resources.html" class="hidden md:block text-primary font-medium">所有资源</a>
+                
+                <!-- 用户菜单 -->
+                <div class="relative">
+                    <button id="user-menu-button" class="flex items-center space-x-2 focus:outline-none">
+                        <img id="user-avatar" src="./images/user.jpg" alt="用户头像" class="w-8 h-8 rounded-full border-2 border-transparent">
+                        <span id="user-display-name" class="hidden md:inline text-sm font-medium">游客</span>
+                        <i class="fa fa-chevron-down text-xs"></i>
+                    </button>
+                    
+                    <!-- 用户下拉菜单 -->
+                    <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 hidden z-50">
+                        <div id="guest-menu" class="block">
+                            <a href="#" id="login-link" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">登录</a>
+                            <a href="#" id="register-link" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">注册</a>
+                        </div>
+                        <div id="user-logged-in-menu" class="hidden">
+                            <div class="px-4 py-2 text-xs text-gray-500 border-b">
+                                <span id="user-id-display" class="font-mono"></span>
+                            </div>
+                            <a href="#" id="profile-link" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">个人资料</a>
+                            <a href="#" id="my-uploads-link" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">我的上传</a>
+                            <a href="#" id="logout-link" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">退出登录</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <a href="#upload" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-full transition-colors flex items-center">
+                    <i class="fa fa-upload mr-2"></i>
+                    <span>上传资源</span>
+                </a>
+                
+
+                
+                <!-- 移动端菜单按钮 -->
+                <button id="menu-toggle" class="md:hidden text-gray-700 focus:outline-none">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+            </nav>
+        </div>
+        
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t">
+            <div class="container mx-auto px-4 py-3">
+                <div class="mb-4">
+                    <input type="text" id="mobile-search-input" placeholder="搜索资源..." class="w-full py-2 px-4 pr-10 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50">
+                </div>
+                <div class="flex flex-col space-y-3">
+                    <a href="#categories" class="hover:text-primary transition-colors py-2">分类</a>
+                    <a href="#new-uploads" class="hover:text-primary transition-colors py-2">最新上传</a>
+                    <a href="#popular" class="hover:text-primary transition-colors py-2">热门资源</a>
+                    <a href="resources.html" class="text-primary font-medium py-2">所有资源</a>
+                    <a href="my-uploads.html" class="hover:text-primary transition-colors py-2">我的上传</a>
+                    <a href="#" id="mobile-login-link" class="hover:text-primary transition-colors py-2">登录/注册</a>
+
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 搜索结果面板 -->
+    <div id="search-results" class="fixed top-16 left-0 right-0 bg-white shadow-lg z-40 hidden max-h-[70vh] overflow-y-auto">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg">搜索结果</h3>
+                <button id="close-search" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div id="search-results-container" class="space-y-4">
+                <!-- 搜索结果动态生成 -->
+            </div>
+            <div id="no-results" class="py-8 text-center hidden">
+                <i class="fa fa-search text-gray-300 text-4xl mb-2"></i>
+                <p class="text-gray-500">没有找到匹配的资源</p>
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- 热门资源 -->
+    <section id="popular" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-10">
+                <div>
+                    <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold mb-3">热门资源</h2>
+                    <p class="text-gray-600 max-w-2xl">
+                        被下载最多、评分最高的精选资源，玩家们的共同选择
+                    </p>
+                </div>
+                <a href="resources.html?sort=most-download" class="mt-4 md:mt-0 inline-flex items-center text-primary hover:text-primary/80 font-medium transition-colors">
+                    查看全部
+                    <i class="fa fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- 资源卡片将通过JS动态生成 -->
+                <div id="popular-resources-container" class="col-span-full flex justify-center">
+                    <div class="w-12 h-12 border-4 border-gray-200 border-t-primary rounded-full loader"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 最新上传 -->
+    <section id="new-uploads" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-10">
+                <div>
+                    <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold mb-3">最新上传</h2>
+                    <p class="text-gray-600 max-w-2xl">
+                        最近上传的资源，第一时间获取最新内容
+                    </p>
+                </div>
+                <a href="resources.html?sort=newest" class="mt-4 md:mt-0 inline-flex items-center text-primary hover:text-primary/80 font-medium transition-colors">
+                    查看全部
+                    <i class="fa fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- 资源卡片将通过JS动态生成 -->
+                <div id="new-uploads-container" class="col-span-full flex justify-center">
+                    <div class="w-12 h-12 border-4 border-gray-200 border-t-primary rounded-full loader"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 上传资源区域 -->
+    <section id="upload" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="grid md:grid-cols-2">
+                    <div class="p-8 md:p-10 flex flex-col justify-center">
+                        <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold mb-4">分享你的资源</h2>
+                        <p class="text-gray-600 mb-6">
+                            上传你的原创地图、材质包、模组或皮肤，与社区玩家共同分享创作的乐趣
+                        </p>
+                        <ul class="space-y-3 mb-8">
+                            <li class="flex items-start">
+                                <i class="fa fa-check-circle text-primary mt-1 mr-3"></i>
+                                <span>支持多种资源格式，自动检测兼容版本</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa fa-check-circle text-primary mt-1 mr-3"></i>
+                                <span>获得下载量统计和用户反馈，持续改进作品</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa fa-check-circle text-primary mt-1 mr-3"></i>
+                                <span>优质资源将获得首页推荐，让更多玩家发现</span>
+                            </li>
+                        </ul>
+                        <button id="upload-button" class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg transition-colors font-medium w-full md:w-auto">
+                        <i class="fa fa-upload mr-2"></i> 立即上传
+                    </button>
+                </div>
+                <div class="hidden md:block relative">
+                    <img src="./images/upload-bg.jpg" alt="上传资源" class="absolute inset-0 w-full h-full object-cover">
+            </div>
+        </div>
+    </section>
+    
+    <!-- 个人资料模态框 -->
+    <div id="profile-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">个人资料</h3>
+                    <button id="close-profile-modal" onclick="closeProfileModal()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="flex flex-col items-center mb-6">
+                    <div class="relative">
+                        <img id="profile-avatar" src="./images/user.jpg" alt="用户头像" class="w-24 h-24 rounded-full object-cover border-4 border-gray-200">
+                        <div id="avatar-upload-area" class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer transition-opacity">
+                            <i class="fas fa-camera text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <input type="file" id="avatar-file" accept="image/*" class="hidden">
+                    <p class="mt-2 text-sm text-gray-600">点击头像更换</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                        <p id="profile-username" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">用户ID</label>
+                        <p id="profile-user-id" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                        <input type="email" id="profile-email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button onclick="closeProfileModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+                        取消
+                    </button>
+                    <button id="save-profile" class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                        保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>                       
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 网站统计 -->
+    <section class="py-16 bg-primary/5">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                <div class="p-6">
+                    <div class="text-4xl md:text-5xl font-bold text-primary mb-2" id="total-resources-count">1,242</div>
+                    <p class="text-gray-600">资源总数</p>
+                </div>
+                <div class="p-6">
+                    <div class="text-4xl md:text-5xl font-bold text-primary mb-2" id="total-users-count">5,876</div>
+                    <p class="text-gray-600">注册用户</p>
+                </div>
+                <div class="p-6">
+                    <div class="text-4xl md:text-5xl font-bold text-primary mb-2" id="total-downloads-count">42,951</div>
+                    <p class="text-gray-600">总下载量</p>
+                </div>
+                <div class="p-6">
+                    <div class="text-4xl md:text-5xl font-bold text-primary mb-2" id="total-uploads-today">18</div>
+                    <p class="text-gray-600">今日上传</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white">
+        <div class="container mx-auto px-4 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i class="fa fa-cube text-primary text-2xl"></i>
+                        <h3 class="text-xl font-bold">幻情的mc小站</h3>
+                    </div>
+                    <p class="text-gray-400 text-sm">
+                        专注于我的世界资源分享与交流，为玩家提供优质的游戏资源
+                    </p>
+                    <div class="flex space-x-4 mt-4">
+                        <a href="#" class="text-gray-400 hover:text-primary transition-colors">
+                            <i class="fa fa-bilibili text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-primary transition-colors">
+                            <i class="fa fa-qq text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-primary transition-colors">
+                            <i class="fa fa-github text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">快速链接</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-primary transition-colors">首页</a></li>
+                        <li><a href="#categories" class="hover:text-primary transition-colors">资源分类</a></li>
+                        <li><a href="#new-uploads" class="hover:text-primary transition-colors">最新上传</a></li>
+                        <li><a href="#popular" class="hover:text-primary transition-colors">热门资源</a></li>
+                        <li><a href="resources.html" class="text-primary">所有资源</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">帮助支持</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-primary transition-colors">使用教程</a></li>
+                        <li><a href="#" class="hover:text-primary transition-colors">常见问题</a></li>
+                        <li><a href="#" class="hover:text-primary transition-colors">用户协议</a></li>
+                        <li><a href="#" class="hover:text-primary transition-colors">版权声明</a></li>
+                        <li><a href="#" class="hover:text-primary transition-colors">联系我们</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">订阅更新</h4>
+                    <p class="text-gray-400 text-sm mb-4">
+                        输入邮箱订阅最新资源和网站更新通知
+                    </p>
+                    <form class="flex">
+                        <input type="email" placeholder="你的邮箱地址" class="px-4 py-2 rounded-l-lg w-full focus:outline-none text-gray-800">
+                        <button type="button" class="bg-primary hover:bg-primary/90 px-4 py-2 rounded-r-lg transition-colors">
+                            <i class="fa fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-10 pt-6 text-center text-gray-500 text-sm">
+                <p>© 2023 幻情的mc小站 - 我的世界资源下载站. 本站资源仅供学习交流使用，侵权请联系删除</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 登录/注册模态框 -->
+    <div id="register-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div class="p-6 border-b">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold">用户注册</h3>
+                    <button id="close-register-modal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <form id="register-form" class="space-y-4">
+                    <div>
+                        <label for="register-username" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                        <input type="text" id="register-username" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="请输入用户名">
+                        <p id="username-error" class="text-red-500 text-xs mt-1 hidden">用户名已存在或长度不足3位</p>
+                    </div>
+                    <div>
+                        <label for="register-email" class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                        <input type="email" id="register-email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="请输入邮箱">
+                        <p id="email-error" class="text-red-500 text-xs mt-1 hidden">邮箱格式不正确</p>
+                    </div>
+                    <div>
+                        <label for="register-password" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                        <input type="password" id="register-password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="请输入密码（至少6位）">
+                        <p id="password-error" class="text-red-500 text-xs mt-1 hidden">密码长度不足6位</p>
+                    </div>
+                    <div>
+                        <label for="register-confirm" class="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
+                        <input type="password" id="register-confirm" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="请再次输入密码">
+                        <p id="confirm-error" class="text-red-500 text-xs mt-1 hidden">两次密码不一致</p>
+                    </div>
+                    <div class="pt-2">
+                        <button type="button" id="submit-register" class="w-full bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-colors font-medium">
+                            注册
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-4 text-center text-sm">
+                    已有账号？<a href="#" id="switch-to-login" class="text-primary hover:underline">立即登录</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div class="p-6 border-b">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold">用户登录</h3>
+                    <button id="close-login-modal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <form id="login-form" class="space-y-4">
+                    <div>
+                        <label for="login-username" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                        <input type="text" id="login-username" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="请输入用户名">
+                    </div>
+                    <div>
+                        <label for="login-password" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                        <input type="password" id="login-password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="请输入密码">
+                    </div>
+                    <p id="login-error" class="text-red-500 text-sm text-center hidden">用户名或密码错误</p>
+                    <div class="pt-2">
+                        <button type="button" id="submit-login" class="w-full bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-colors font-medium">
+                            登录
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-4 text-center text-sm">
+                    还没有账号？<a href="#" id="switch-to-register" class="text-primary hover:underline">立即注册</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注册成功模态框 -->
+    <div id="register-success-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa fa-check text-primary text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">注册成功！</h3>
+            <p class="text-gray-600 mb-4">你的用户编号是：<span id="new-user-id" class="font-mono font-bold text-primary"></span></p>
+            <p class="text-gray-500 text-sm mb-6">请妥善保存你的用户编号，用于账号找回</p>
+            <button id="got-it-register" class="bg-primary hover:bg-primary/90 text-white py-2 px-6 rounded-lg transition-colors font-medium">
+                知道了
+            </button>
+        </div>
+    </div>
+
+    <!-- 上传资源模态框 -->
+    <div id="upload-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold">上传资源</h3>
+                    <button id="close-upload-modal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <form id="upload-form" class="space-y-6">
+                    <div id="upload-guest-message" class="bg-yellow-50 border-l-4 border-yellow-400 p-4 hidden">
+                        <p class="text-sm text-yellow-700">
+                            <i class="fa fa-info-circle mr-2"></i>
+                            登录后可以上传资源并获得下载统计和用户反馈
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <label for="resource-name" class="block text-sm font-medium text-gray-700 mb-1">资源名称</label>
+                        <input type="text" id="resource-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="请输入资源名称">
+                    </div>
+                    
+                    <div>
+                        <label for="resource-category" class="block text-sm font-medium text-gray-700 mb-1">资源分类</label>
+                        <select id="resource-category" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option value="">请选择分类</option>
+                            <option value="地图">地图</option>
+                            <option value="材质包">材质包</option>
+                            <option value="模组">模组</option>
+                            <option value="皮肤">皮肤</option>
+                            <option value="插件">插件</option>
+                            <option value="数据包">数据包</option>
+                            <option value="整合包">整合包</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="resource-version" class="block text-sm font-medium text-gray-700 mb-1">兼容版本</label>
+                        <select id="resource-version" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                            <option value="">请选择版本</option>
+                            <option value="1.20.x">1.20.x</option>
+                            <option value="1.19.x">1.19.x</option>
+                            <option value="1.18.x">1.18.x</option>
+                            <option value="1.17.x">1.17.x</option>
+                            <option value="1.16.x">1.16.x</option>
+                            <option value="1.15.x以下">1.15.x以下</option>
+                            <option value="全版本">全版本</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="resource-description" class="block text-sm font-medium text-gray-700 mb-1">资源描述</label>
+                        <textarea id="resource-description" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="请描述你的资源特点、使用方法等"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">资源文件</label>
+                        <div id="file-upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                            <input type="file" id="resource-file" class="hidden" accept=".zip,.rar,.7z,.jar,.mcpack,.mcworld">
+                            <i class="fa fa-cloud-upload text-3xl text-gray-400 mb-2"></i>
+                            <p class="text-gray-600 mb-1">点击或拖拽文件到此处上传</p>
+                            <p class="text-xs text-gray-500">支持 .zip, .rar, .7z, .jar, .mcpack, .mcworld 格式</p>
+                        </div>
+                        <div id="file-upload-progress" class="hidden mt-2">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span id="uploading-filename">文件名</span>
+                                <span id="upload-percentage">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div id="upload-progress-bar" class="bg-primary h-2.5 rounded-full progress-animation" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">预览图片（可选）</label>
+                        <div id="image-upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                            <input type="file" id="preview-image" class="hidden" accept="image/*">
+                            <i class="fa fa-image text-3xl text-gray-400 mb-2"></i>
+                            <p class="text-gray-600 mb-1">点击或拖拽图片到此处上传</p>
+                            <p class="text-xs text-gray-500">支持 JPG, PNG 格式，建议尺寸 400×225</p>
+                        </div>
+                        <div id="preview-image-container" class="mt-3 hidden">
+                            <img id="selected-image" src="" alt="预览图" class="max-w-full h-48 object-contain rounded-lg border">
+                        </div>
+                    </div>
+                    
+                    <div class="pt-4">
+                        <button type="button" id="submit-upload" class="w-full bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-colors font-medium">
+                            提交上传
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 资源详情模态框 -->
+    <div id="resource-detail-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="relative">
+                <!-- 资源图片轮播 -->
+                <div id="resource-image-carousel" class="h-64 md:h-80 bg-gray-100 relative">
+                    <img id="carousel-image" src="./images/carousel.jpg" alt="资源图片" class="w-full h-full object-cover">
+                    <button id="prev-image" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/50 transition-colors">
+                        <i class="fa fa-chevron-left"></i>
+                    </button>
+                    <button id="next-image" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/50 transition-colors">
+                        <i class="fa fa-chevron-right"></i>
+                    </button>
+                    <div id="image-indicators" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-1">
+                        <!-- 动态生成指示器 -->
+                    </div>
+                </div>
+                <button id="close-resource-modal" class="absolute top-3 right-3 bg-black/30 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/50 transition-colors z-10">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
+                    <div>
+                        <span id="resource-detail-category" class="inline-block bg-primary/10 text-primary text-xs px-2 py-1 rounded-full mb-2">地图</span>
+                        <h3 id="resource-detail-name" class="text-2xl font-bold mb-1">现代城市地图 1.19</h3>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <span id="resource-detail-author" class="flex items-center"><i class="fa fa-user mr-1"></i> 我的世界建筑师</span>
+                            <span class="mx-2">•</span>
+                            <span id="resource-detail-version" class="flex items-center"><i class="fa fa-code-fork mr-1"></i> 1.19.2</span>
+                            <span class="mx-2">•</span>
+                            <span id="resource-detail-date" class="flex items-center"><i class="fa fa-calendar mr-1"></i> 2小时前</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3">
+                        <button id="favorite-resource" class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+                            <i class="fa fa-heart-o"></i>
+                        </button>
+                        <button id="share-resource" class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+                            <i class="fa fa-share-alt"></i>
+                        </button>
+                        <button id="download-resource" class="download-btn bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg flex items-center resource-download" data-resource-id="1">
+                            <i class="fa fa-download mr-2"></i>
+                            <span>下载</span>
+                            <span id="download-count" class="ml-2 text-sm bg-white/20 px-2 py-0.5 rounded">142</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="border-t pt-6 pb-4">
+                    <h4 class="font-bold text-lg mb-3">资源介绍</h4>
+                    <div id="resource-detail-description" class="prose max-w-none text-gray-700">
+                        一个大型现代城市地图，包含摩天大楼、道路系统和基础设施，支持多人联机，适合生存和建筑玩法。
+                    </div>
+                </div>
+                
+                <!-- 版本历史 -->
+                <div class="version-history mt-6">
+                    <h3 class="font-bold text-lg mb-3">版本历史</h3>
+                    <div id="version-list" class="space-y-3">
+                        <div class="version-item p-4 border border-gray-200 rounded-lg">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="version-number">1.1.0 <span class="text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded ml-2">最新</span></div>
+                                    <div class="text-sm mt-1">修复了多个游戏崩溃问题，优化了资源加载速度</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="version-date">2023-11-15</div>
+                                    <button class="mt-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary/20 download-version">
+                                        下载
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 评论区 -->
+                <div class="border-t pt-6">
+                    <h4 class="font-bold text-lg mb-4">用户评论</h4>
+                    
+                    <!-- 发表评论 -->
+                    <div id="comment-input-container" class="mb-6">
+                        <div class="flex space-x-3">
+                            <img id="current-user-avatar" src="./images/user.jpg" alt="Your avatar" class="w-10 h-10 rounded-full">
+                            <div class="flex-1">
+                                <textarea id="comment-input" rows="2" placeholder="分享你的使用体验..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary resize-none"></textarea>
+                                <div class="flex justify-between mt-2">
+                                    <div class="flex items-center text-sm text-gray-500">
+                                        <i class="fa fa-info-circle mr-1"></i>
+                                        <span>请文明评论，遵守社区规范</span>
+                                    </div>
+                                    <button id="submit-comment" class="bg-primary hover:bg-primary/90 text-white px-4 py-1.5 rounded-lg text-sm transition-colors">
+                                        发表评论
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 评论列表 -->
+                    <div id="comments-list" class="space-y-6">
+                        <div class="text-center text-gray-500 py-8" id="no-comments-message">
+                            <i class="fa fa-comment-o text-3xl mb-2"></i>
+                            <p>还没有评论，快来抢沙发吧~</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑模式提示 -->
+    <div id="editor-mode-notice" class="fixed bottom-4 right-4 bg-accent text-dark px-4 py-2 rounded-lg shadow-lg flex items-center hidden z-50">
+        <i class="fa fa-pencil mr-2"></i>
+        <span>编辑模式已开启</span>
+        <button id="exit-editor" class="ml-3 text-dark hover:text-white hover:bg-dark/20 p-1 rounded-full">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 1. 数据库配置与初始化
+        const DB_NAME = 'MCResourceDB';
+        const DB_VERSION = 1;
+        let db;
+        let currentUser = null;
+        let allResources = [];
+        let isEditorMode = false;
+
+        // 初始化数据库
+        async function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    if (!db.objectStoreNames.contains('files')) db.createObjectStore('files', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('resources')) db.createObjectStore('resources', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('comments')) db.createObjectStore('comments', { keyPath: 'id', autoIncrement: true });
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+
+                request.onerror = (event) => {
+                    console.error('IndexedDB初始化失败:', event.target.error);
+                    showMessage('数据库加载失败，部分功能可能无法使用', 'error');
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        // 2. 用户系统
+        // 初始化用户系统
+        async function initUserSystem() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    updateUserInterface();
+                } catch (e) {
+                    localStorage.removeItem('currentUser');
+                }
+            }
+            
+            // 检查是否是管理员（演示用）
+            if (currentUser && currentUser.id === 'admin') {
+                document.getElementById('toggle-editor').classList.remove('hidden');
+                document.getElementById('mobile-toggle-editor').classList.remove('hidden');
+            }
+        }
+
+        // 更新用户界面
+        function updateUserInterface() {
+            if (currentUser) {
+                document.getElementById('user-display-name').textContent = currentUser.username;
+                document.getElementById('user-avatar').src = `images/user.jpg`;
+                document.getElementById('guest-menu').classList.add('hidden');
+                document.getElementById('user-logged-in-menu').classList.remove('hidden');
+                document.getElementById('user-id-display').textContent = `用户编号: ${currentUser.id}`;
+                document.getElementById('current-user-avatar').src = 'images/user.jpg';
+                document.getElementById('upload-guest-message').classList.add('hidden');
+            } else {
+                document.getElementById('user-display-name').textContent = '游客';
+                document.getElementById('user-avatar').src = 'images/user.jpg';
+                document.getElementById('guest-menu').classList.remove('hidden');
+                document.getElementById('user-logged-in-menu').classList.add('hidden');
+                document.getElementById('current-user-avatar').src = 'images/user.jpg';
+                document.getElementById('upload-guest-message').classList.remove('hidden');
+            }
+        }
+
+        // 用户注册
+        async function registerUser(username, email, password) {
+            // 本地注册用户
+        const result = await registerUserLocally(username, email, password);
+            
+            if (result.success) {
+                currentUser = result.user;
+                updateUserInterface();
+            }
+            
+            return result;
+        }
+
+        // 用户登录
+        async function loginUser(username, password) {
+            // 本地登录用户
+        const result = await loginUserLocally(username, password);
+            
+            if (result.success) {
+                currentUser = result.user;
+                updateUserInterface();
+            }
+            
+            return result;
+        }
+
+        // 用户登出
+        async function logoutUser() {
+            // 本地登出用户
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
+            
+            currentUser = null;
+            updateUserInterface();
+            showMessage('已成功登出', 'success');
+        }
+
+        // 3. 资源管理
+        // 加载资源数据
+        async function loadResources() {
+            if (!db) await initDB();
+            
+            const tx = db.transaction(['resources'], 'readonly');
+            const store = tx.objectStore('resources');
+            
+            // 读取默认资源
+            const defaultResources = [
+                {
+                    id: 'default-1',
+                    name: '现代城市地图 1.19',
+                    category: '地图',
+                    version: '1.19.2',
+                    author: '我的世界建筑师',
+                    authorId: 'author1',
+                    time: '2小时前',
+                    downloads: 142,
+                    rating: '4.8',
+                    imageUrl: 'images/resource-default.jpg',
+                    description: '一个大型现代城市地图，包含摩天大楼、道路系统和基础设施，支持多人联机。',
+                    uploadDate: new Date().toISOString()
+                },
+                {
+                    id: 'default-2',
+                    name: '自然高清材质包 64x',
+                    category: '材质包',
+                    version: '1.20.1',
+                    author: '像素艺术家',
+                    authorId: 'author2',
+                    time: '5小时前',
+                    downloads: 87,
+                    rating: '4.9',
+                    imageUrl: 'images/resource-default.jpg',
+                    description: '超高清自然风格材质包，提升游戏画面质感，优化光影效果，支持光影模组。',
+                    uploadDate: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: 'default-3',
+                    name: '高级科技模组 1.18+',
+                    category: '模组',
+                    version: '1.18.2-1.19.4',
+                    author: '红石工程师',
+                    authorId: 'author3',
+                    time: '昨天',
+                    downloads: 326,
+                    rating: '4.7',
+                    imageUrl: 'images/resource-default.jpg',
+                    description: '添加各种高科技设备和机器，支持自动化生产，包含能源系统和科技树。',
+                    uploadDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: 'default-4',
+                    name: '幻想角色皮肤包',
+                    category: '皮肤',
+                    version: '全版本',
+                    author: '皮肤设计师',
+                    authorId: 'author4',
+                    time: '2天前',
+                    downloads: 178,
+                    rating: '4.5',
+                    imageUrl: 'images/resource-default.jpg',
+                    description: '10款幻想风格角色皮肤，包括骑士、巫师和精灵等，支持多人联机显示。',
+                    uploadDate: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: 'default-5',
+                    name: '生存必备插件包',
+                    category: '插件',
+                    version: '1.19.x',
+                    author: '服务器管理员',
+                    authorId: 'author5',
+                    time: '3天前',
+                    downloads: 215,
+                    rating: '4.6',
+                    imageUrl: 'images/resource-default.jpg',
+                    description: '包含领地、权限、经济等生存服务器必备插件，支持一键安装。',
+                    uploadDate: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: 'default-6',
+                    name: '冒险地图：龙之巢穴',
+                    category: '地图',
+                    version: '1.19.3',
+                    author: '地图创作者',
+                    authorId: 'author6',
+                    time: '1周前',
+                    downloads: 423,
+                    rating: '4.9',
+                    imageUrl: 'images/resource-default.jpg',
+                    description: '史诗级冒险地图，包含剧情任务、BOSS战和隐藏宝箱，适合单人或多人游玩。',
+                    uploadDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: 'default-7',
+                    name: '工业2模组整合包',
+                    category: '整合包',
+                    version: '1.16.5',
+                    author: '整合包作者',
+                    authorId: 'author7',
+                    time: '2周前',
+                    downloads: 512,
+                    rating: '4.7',
+                    imageUrl: './images/resource7.jpg',
+                    description: '包含工业2、建筑Craft、林业等模组，适合科技生存玩法，已配置优化。',
+                    uploadDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
+                },
+                {
+                    id: 'default-8',
+                    name: '中世纪材质包 32x',
+                    category: '材质包',
+                    version: '1.18.x',
+                    author: '材质设计师',
+                    authorId: 'author8',
+                    time: '3周前',
+                    downloads: 387,
+                    rating: '4.8',
+                    imageUrl: './images/resource8.jpg',
+                    description: '中世纪风格材质包，适合城堡建筑和RPG玩法，优化了盔甲和武器纹理。',
+                    uploadDate: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString()
+                }
+            ];
+            
+            // 从数据库读取自定义资源
+            const customResources = await new Promise(resolve => {
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => resolve([]);
+            });
+            
+            // 合并资源（去重）
+            const resourceIds = new Set(customResources.map(r => r.id));
+            defaultResources.forEach(res => {
+                if (!resourceIds.has(res.id)) customResources.push(res);
+            });
+            
+            allResources = customResources;
+            return allResources;
+        }
+
+        // 渲染最新上传资源
+        async function renderNewUploads() {
+            const container = document.getElementById('new-uploads-container');
+            container.innerHTML = '';
+            
+            // 按上传时间排序
+            const sorted = [...allResources].sort((a, b) => 
+                new Date(b.uploadDate) - new Date(a.uploadDate)
+            );
+            
+            // 取前8个
+            const recent = sorted.slice(0, 8);
+            
+            recent.forEach(resource => {
+                container.appendChild(createResourceCard(resource));
+            });
+        }
+
+        // 渲染热门资源
+        async function renderPopularResources() {
+            const container = document.getElementById('popular-resources-container');
+            container.innerHTML = '';
+            
+            // 按下载量排序
+            const sorted = [...allResources].sort((a, b) => 
+                parseInt(b.downloads) - parseInt(a.downloads)
+            );
+            
+            // 取前8个
+            const popular = sorted.slice(0, 8);
+            
+            popular.forEach(resource => {
+                container.appendChild(createResourceCard(resource));
+            });
+        }
+
+        // 创建资源卡片
+        function createResourceCard(resource) {
+            const card = document.createElement('div');
+            card.className = 'resource-card bg-white rounded-xl overflow-hidden shadow-md';
+            card.setAttribute('data-resource-id', resource.id);
+            card.innerHTML = `
+                <div class="relative">
+                    <img src="${resource.imageUrl}" alt="${resource.name}" class="w-full h-48 object-cover">
+                    <span class="absolute top-3 left-3 bg-secondary text-white text-xs font-bold px-2 py-1 rounded">${resource.category}</span>
+                    <button class="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors favorite-button" data-resource-id="${resource.id}">
+                        <i class="fa fa-heart-o"></i>
+                    </button>
+                </div>
+                <div class="p-5">
+                    <div class="flex items-center text-sm text-gray-500 mb-2">
+                        <img src="./images/user.jpg" alt="作者头像" class="w-6 h-6 rounded-full mr-2">
+                        <span>${resource.author}</span>
+                        <span class="mx-2">•</span>
+                        <span>${resource.time}</span>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2 resource-name" contenteditable="${isEditorMode}">${resource.name}</h3>
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-2 resource-description" contenteditable="${isEditorMode}">${resource.description || '这是一个优质的我的世界资源'}</p>
+                    <div class="flex items-center justify-center justify-between">
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fa fa-download mr-1"></i> ${resource.downloads || 0}
+                            <span class="mx-2">•</span>
+                            <i class="fa fa-star text-yellow-400 mr-1"></i> ${resource.rating}
+                        </div>
+                        <button class="download-btn bg-primary text-white px-3 py-1 rounded-full text-sm flex items-center resource-download" data-resource-id="${resource.id}">
+                            <i class="fa fa-download mr-1"></i> 下载
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // 点击卡片打开详情
+            card.addEventListener('click', (e) => {
+                if (!e.target.closest('.resource-download') && !e.target.closest('.favorite-button')) {
+                    openResourceDetail(resource);
+                }
+            });
+            
+            // 收藏按钮事件
+            card.querySelector('.favorite-button').addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFavorite(resource.id, e.currentTarget);
+            });
+            
+            // 编辑模式下保存修改
+            if (isEditorMode) {
+                const nameEl = card.querySelector('.resource-name');
+                const descEl = card.querySelector('.resource-description');
+                
+                nameEl.addEventListener('blur', () => {
+                    updateResourceField(resource.id, 'name', nameEl.textContent);
+                });
+                
+                descEl.addEventListener('blur', () => {
+                    updateResourceField(resource.id, 'description', descEl.textContent);
+                });
+            }
+            
+            return card;
+        }
+
+        // 更新资源字段（编辑模式）
+        async function updateResourceField(resourceId, field, value) {
+            if (!db || !isEditorMode) return;
+            
+            const tx = db.transaction(['resources'], 'readwrite');
+            const store = tx.objectStore('resources');
+            const resource = await new Promise(resolve => {
+                store.get(resourceId).onsuccess = e => resolve(e.target.result);
+            });
+            
+            if (resource) {
+                resource[field] = value;
+                store.put(resource);
+                
+                // 更新内存中的数据
+                const index = allResources.findIndex(r => r.id === resourceId);
+                if (index !== -1) {
+                    allResources[index][field] = value;
+                }
+                
+                showMessage('资源已更新', 'success');
+            }
+        }
+
+        // 4. 上传资源功能
+        // 处理文件上传
+        async function handleFileUpload(file) {
+            const fileName = document.getElementById('uploading-filename');
+            const progressBar = document.getElementById('upload-progress-bar');
+            const percentage = document.getElementById('upload-percentage');
+            const progressContainer = document.getElementById('file-upload-progress');
+            
+            // 显示进度条
+            fileName.textContent = file.name;
+            progressContainer.classList.remove('hidden');
+            
+            // 模拟上传进度
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    
+                    // 上传完成后保存资源
+                    setTimeout(async () => {
+                        await saveUploadedResource(file);
+                    }, 500);
+                }
+                
+                progressBar.style.width = `${progress}%`;
+                percentage.textContent = `${Math.round(progress)}%`;
+            }, 300);
+        }
+
+        // 保存上传的资源
+        async function saveUploadedResource(file) {
+            // 获取表单数据
+            const name = document.getElementById('resource-name').value || '未命名资源';
+            const category = document.getElementById('resource-category').value || '其他';
+            const version = document.getElementById('resource-version').value || '未知版本';
+            const description = document.getElementById('resource-description').value || '无描述';
+            
+            // 处理预览图片
+            let imageUrl = './images/resource-default.jpg';
+            const previewImage = document.getElementById('selected-image');
+            if (previewImage.src) {
+                imageUrl = previewImage.src;
+            }
+            
+            // 创建资源对象
+            const newResource = {
+                name,
+                category,
+                version,
+                author: currentUser ? currentUser.username : '匿名用户',
+                authorId: currentUser ? currentUser.id : 'anonymous',
+                description,
+                imageUrl,
+                uploadDate: new Date().toISOString(),
+                file: {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type
+                }
+            };
+            
+            try {
+                // 本地保存资源
+                const savedResource = {
+                    ...newResource,
+                    id: Date.now().toString(),
+                    downloads: 0,
+                    rating: '0',
+                    time: '刚刚'
+                };
+                
+                // 同时保存到本地IndexedDB
+                if (!db) await initDB();
+                const tx = db.transaction(['resources'], 'readwrite');
+                tx.objectStore('resources').add(savedResource);
+                
+                // 添加到资源列表
+                allResources.unshift(savedResource);
+                
+                // 重新渲染列表
+                renderNewUploads();
+                
+                // 关闭上传模态框
+                document.getElementById('upload-modal').classList.add('hidden');
+                document.body.style.overflow = '';
+                
+                // 重置表单
+                document.getElementById('upload-form').reset();
+                document.getElementById('preview-image-container').classList.add('hidden');
+                document.getElementById('file-upload-progress').classList.add('hidden');
+                
+                // 尝试更新my-uploads.html页面中的资源数量
+                try {
+                    // 向my-uploads.html页面发送消息，通知资源数量已更新
+                    const myUploadsWindow = window.open('my-uploads.html', 'myUploadsWindow');
+                    if (myUploadsWindow && !myUploadsWindow.closed) {
+                        myUploadsWindow.postMessage({ type: 'resourceCountUpdated' }, '*');
+                    }
+                } catch (e) {
+                    console.log('无法更新my-uploads页面的资源数量');
+                }
+                
+                showMessage('资源上传成功！', 'success');
+            } catch (error) {
+                console.error('上传资源失败:', error);
+                showMessage('资源上传失败: ' + error.message, 'error');
+                
+                // 关闭上传模态框
+                document.getElementById('upload-modal').classList.add('hidden');
+                document.body.style.overflow = '';
+                
+                // 重置表单
+                document.getElementById('upload-form').reset();
+                document.getElementById('preview-image-container').classList.add('hidden');
+                document.getElementById('file-upload-progress').classList.add('hidden');
+            }
+        }
+
+        // 5. 资源详情功能
+        // 打开资源详情
+        function openResourceDetail(resource) {
+            const modal = document.getElementById('resource-detail-modal');
+            document.body.style.overflow = 'hidden';
+            
+            // 填充详情数据
+            document.getElementById('resource-detail-category').textContent = resource.category;
+            document.getElementById('resource-detail-name').textContent = resource.name;
+            document.getElementById('resource-detail-author').innerHTML = `<i class="fa fa-user mr-1"></i> ${resource.author}`;
+            document.getElementById('resource-detail-version').innerHTML = `<i class="fa fa-code-fork mr-1"></i> ${resource.version}`;
+            document.getElementById('resource-detail-date').innerHTML = `<i class="fa fa-calendar mr-1"></i> ${resource.time}`;
+            document.getElementById('download-count').textContent = resource.downloads || 0;
+            document.getElementById('resource-detail-description').textContent = resource.description || '这是一个优质的我的世界资源';
+            document.getElementById('carousel-image').src = resource.imageUrl;
+            document.getElementById('download-resource').setAttribute('data-resource-id', resource.id);
+            
+            // 检查是否已收藏
+            checkResourceFavorite(resource.id).then(isFav => {
+                const favBtn = document.getElementById('favorite-resource');
+                if (isFav) {
+                    favBtn.innerHTML = '<i class="fa fa-heart text-red-500"></i>';
+                    favBtn.classList.add('text-red-500');
+                } else {
+                    favBtn.innerHTML = '<i class="fa fa-heart-o"></i>';
+                    favBtn.classList.remove('text-red-500');
+                }
+            });
+            
+            // 加载评论
+            loadComments(resource.id);
+            
+            // 显示模态框
+            modal.classList.remove('hidden');
+        }
+
+        // 检查资源是否已收藏
+        async function checkResourceFavorite(resourceId) {
+            if (!db || !currentUser) return false;
+            const tx = db.transaction(['users'], 'readonly');
+            const store = tx.objectStore('users');
+            const user = await new Promise(resolve => {
+                store.get(currentUser.id).onsuccess = e => resolve(e.target.result);
+            });
+            return user?.favorites?.includes(resourceId) || false;
+        }
+
+        // 切换收藏状态
+        async function toggleFavorite(resourceId, element) {
+            if (!currentUser) {
+                // 未登录，显示登录模态框
+                document.getElementById('login-modal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                return;
+            }
+            
+            if (!db) await initDB();
+            
+            const tx = db.transaction(['users'], 'readwrite');
+            const store = tx.objectStore('users');
+            const user = await new Promise(resolve => {
+                store.get(currentUser.id).onsuccess = e => resolve(e.target.result);
+            });
+            
+            if (!user.favorites) user.favorites = [];
+            
+            const index = user.favorites.indexOf(resourceId);
+            if (index === -1) {
+                // 添加收藏
+                user.favorites.push(resourceId);
+                if (element) {
+                    element.innerHTML = '<i class="fa fa-heart text-red-500"></i>';
+                    element.classList.add('text-red-500');
+                }
+                showMessage('已添加到收藏', 'success');
+            } else {
+                // 取消收藏
+                user.favorites.splice(index, 1);
+                if (element) {
+                    element.innerHTML = '<i class="fa fa-heart-o"></i>';
+                    element.classList.remove('text-red-500');
+                }
+                showMessage('已取消收藏', 'info');
+            }
+            
+            // 保存更新
+            store.put(user);
+            currentUser = user;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+        }
+
+        // 6. 评论功能
+        // 加载评论
+        async function loadComments(resourceId) {
+            if (!db) await initDB();
+            
+            const tx = db.transaction(['comments'], 'readonly');
+            const store = tx.objectStore('comments');
+            const allComments = await new Promise(resolve => {
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => resolve([]);
+            });
+            
+            // 筛选当前资源的评论
+            // 分离父评论和回复评论
+            const parentComments = allComments
+                .filter(c => c.resourceId === resourceId && !c.parentId)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const replyComments = allComments
+                .filter(c => c.resourceId === resourceId && c.parentId);
+            
+            const container = document.getElementById('comments-list');
+            const noComments = document.getElementById('no-comments-message');
+            
+            // 确保元素存在
+            if (!container || !noComments) return;
+            
+            container.innerHTML = '';
+            
+            if (parentComments.length === 0) {
+                noComments.classList.remove('hidden');
+                return;
+            }
+            
+            noComments.classList.add('hidden');
+            
+            parentComments.forEach(comment => {
+                // 检查是否超过2分钟，决定是否显示删除按钮
+                const commentDate = new Date(comment.date);
+                const now = new Date();
+                const diffMinutes = Math.floor((now - commentDate) / (1000 * 60));
+                const canDelete = diffMinutes < 2 && currentUser && currentUser.id === comment.userId;
+                const isAuthor = currentUser && currentUser.id === comment.userId;
+                
+                // 获取该评论的回复
+                const replies = replyComments
+                    .filter(reply => reply.parentId === comment.id)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                const commentEl = document.createElement('div');
+                commentEl.className = 'comment-item';
+                commentEl.innerHTML = `
+                    <div class="flex space-x-3">
+                        <img src="./images/user.jpg" alt="${comment.username}" class="w-10 h-10 rounded-full">
+                        <div class="flex-1">
+                            <div class="flex justify-between">
+                                <h4 class="font-medium">${comment.username}</h4>
+                                <div class="flex items-center space-x-2">
+                                    ${isAuthor ? `<button class="edit-comment text-xs text-blue-500 hover:text-blue-700" data-comment-id="${comment.id}" data-comment-content="${comment.content}">编辑</button>` : ''}
+                                    <button class="reply-comment text-xs text-green-500 hover:text-green-700" data-comment-id="${comment.id}" data-comment-author="${comment.username}">回复</button>
+                                    ${canDelete ? `<button class="delete-comment text-xs text-red-500 hover:text-red-700" data-comment-id="${comment.id}">删除</button>` : ''}
+                                    <span class="text-xs text-gray-500">${formatDate(comment.date)}${comment.edited ? ' (已编辑)' : ''}</span>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 mt-1 comment-content">${comment.content}</p>
+                            <!-- 回复列表 -->
+                            <div class="replies-list mt-3 ml-4 border-l-2 border-gray-200 pl-3">
+                                ${replies.map(reply => {
+                                    const replyDate = new Date(reply.date);
+                                    const replyDiffMinutes = Math.floor((now - replyDate) / (1000 * 60));
+                                    const canDeleteReply = replyDiffMinutes < 2 && currentUser && currentUser.id === reply.userId;
+                                    const isReplyAuthor = currentUser && currentUser.id === reply.userId;
+                                    
+                                    return `
+                                        <div class="reply-item py-2">
+                                            <div class="flex justify-between">
+                                                <h5 class="font-medium text-sm">${reply.username}</h5>
+                                                <div class="flex items-center space-x-2">
+                                                    ${isReplyAuthor ? `<button class="edit-comment text-xs text-blue-500 hover:text-blue-700" data-comment-id="${reply.id}" data-comment-content="${reply.content}">编辑</button>` : ''}
+                                                    ${canDeleteReply ? `<button class="delete-comment text-xs text-red-500 hover:text-red-700" data-comment-id="${reply.id}">删除</button>` : ''}
+                                                    <span class="text-xs text-gray-500">${formatDate(reply.date)}${reply.edited ? ' (已编辑)' : ''}</span>
+                                                </div>
+                                            </div>
+                                            <p class="text-gray-600 text-sm mt-1">${reply.content}</p>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                            <!-- 回复表单 -->
+                            <div class="reply-form mt-3 hidden">
+                                <div class="flex space-x-2">
+                                    <input type="text" class="reply-input flex-1 px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="回复 ${comment.username}...">
+                                    <button class="submit-reply bg-primary hover:bg-primary/90 text-white px-3 py-1 rounded-lg text-sm transition-colors" data-comment-id="${comment.id}">发送</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(commentEl);
+            });
+        }
+
+        // 发表评论
+        async function submitComment(resourceId, content) {
+            if (!currentUser) {
+                // 未登录，显示登录模态框
+                document.getElementById('login-modal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                return;
+            }
+            
+            if (!content.trim()) {
+                showMessage('评论内容不能为空', 'error');
+                return;
+            }
+            
+            if (!db) await initDB();
+            
+            // 创建评论对象
+            const comment = {
+                id: Date.now().toString(), // 添加唯一ID
+                resourceId,
+                userId: currentUser.id,
+                username: currentUser.username,
+                content,
+                date: new Date().toISOString()
+            };
+            
+            // 保存评论
+            const tx = db.transaction(['comments'], 'readwrite');
+            tx.objectStore('comments').add(comment);
+            
+            tx.oncomplete = () => {
+                // 重新加载评论
+                loadComments(resourceId);
+                
+                // 清空输入框
+                document.getElementById('comment-input').value = '';
+                
+                showMessage('评论发表成功', 'success');
+            };
+        }
+        
+        // 删除评论
+        async function deleteComment(commentId, resourceId) {
+            if (!db) await initDB();
+            
+            // 从数据库删除评论
+            const tx = db.transaction(['comments'], 'readwrite');
+            tx.objectStore('comments').delete(commentId);
+            
+            tx.oncomplete = () => {
+                // 重新加载评论
+                loadComments(resourceId);
+                showMessage('评论删除成功', 'success');
+            };
+            
+            tx.onerror = () => {
+                showMessage('删除评论失败，请重试', 'error');
+            };
+        }
+
+        // 编辑评论
+        async function editComment(commentId, resourceId, newContent) {
+            if (!db) await initDB();
+            
+            // 获取现有评论
+            const tx = db.transaction(['comments'], 'readwrite');
+            const store = tx.objectStore('comments');
+            
+            const request = store.get(commentId);
+            request.onsuccess = () => {
+                const comment = request.result;
+                if (comment) {
+                    // 更新评论内容
+                    comment.content = newContent;
+                    comment.edited = true; // 标记为已编辑
+                    store.put(comment);
+                    
+                    // 重新加载评论
+                    loadComments(resourceId);
+                    showMessage('评论更新成功', 'success');
+                }
+            };
+            
+            tx.onerror = () => {
+                showMessage('更新评论失败，请重试', 'error');
+            };
+        }
+
+        // 回复评论
+        async function replyComment(commentId, resourceId, content) {
+            if (!currentUser) {
+                // 未登录，显示登录模态框
+                document.getElementById('login-modal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                return;
+            }
+            
+            if (!content.trim()) {
+                showMessage('回复内容不能为空', 'error');
+                return;
+            }
+            
+            if (!db) await initDB();
+            
+            // 获取被回复的评论
+            const tx = db.transaction(['comments'], 'readonly');
+            const store = tx.objectStore('comments');
+            
+            const request = store.get(commentId);
+            request.onsuccess = () => {
+                const parentComment = request.result;
+                if (parentComment) {
+                    // 创建回复评论对象
+                    const reply = {
+                        id: Date.now().toString(), // 添加唯一ID
+                        resourceId,
+                        userId: currentUser.id,
+                        username: currentUser.username,
+                        content,
+                        date: new Date().toISOString(),
+                        parentId: commentId // 关联父评论ID
+                    };
+                    
+                    // 保存回复
+                    const writeTx = db.transaction(['comments'], 'readwrite');
+                    writeTx.objectStore('comments').add(reply);
+                    
+                    writeTx.oncomplete = () => {
+                        // 重新加载评论
+                        loadComments(resourceId);
+                        showMessage('回复发表成功', 'success');
+                    };
+                    
+                    writeTx.onerror = () => {
+                        showMessage('发表回复失败，请重试', 'error');
+                    };
+                }
+            };
+        }
+
+        // 7. 搜索功能
+        function performSearch(query) {
+            if (!query.trim()) {
+                document.getElementById('search-results').classList.add('hidden');
+                return;
+            }
+            
+            const results = allResources.filter(resource => 
+                resource.name.toLowerCase().includes(query.toLowerCase()) ||
+                resource.description.toLowerCase().includes(query.toLowerCase()) ||
+                resource.category.toLowerCase().includes(query.toLowerCase()) ||
+                resource.author.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            // 显示搜索结果面板
+            const resultsContainer = document.getElementById('search-results-container');
+            resultsContainer.innerHTML = '';
+            document.getElementById('no-results').classList.add('hidden');
+            document.getElementById('search-results').classList.remove('hidden');
+            
+            if (results.length === 0) {
+                document.getElementById('no-results').classList.remove('hidden');
+                return;
+            }
+            
+            results.forEach(resource => {
+                const item = document.createElement('div');
+                item.className = 'search-result p-3 border-b last:border-0 hover:bg-gray-50';
+                item.innerHTML = `
+                    <div class="flex">
+                        <img src="${resource.imageUrl}" alt="${resource.name}" class="w-16 h-16 object-cover rounded mr-3">
+                        <div class="flex-1">
+                            <div class="flex justify-between">
+                                <h4 class="font-bold">${highlightText(resource.name, query)}</h4>
+                                <span class="text-xs bg-secondary/20 text-secondary px-2 py-0.5 rounded">${resource.category}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1 line-clamp-2">${highlightText(resource.description, query)}</p>
+                            <div class="flex items-center mt-2 text-xs text-gray-500">
+                                <i class="fa fa-download mr-1"></i> ${resource.downloads || 0}
+                                <span class="mx-2">•</span>
+                                <i class="fa fa-star text-yellow-400 mr-1"></i> ${resource.rating}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                item.addEventListener('click', () => {
+                    document.getElementById('search-results').classList.add('hidden');
+                    openResourceDetail(resource);
+                });
+                resultsContainer.appendChild(item);
+            });
+        }
+
+        // 高亮搜索文本
+        function highlightText(text, query) {
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<span class="search-highlight">$1</span>');
+        }
+
+        // 8. 工具函数
+        // 显示消息提示
+        function showMessage(text, type = 'info') {
+            const messageEl = document.getElementById('status-message') || document.createElement('div');
+            if (!document.getElementById('status-message')) {
+                messageEl.id = 'status-message';
+                messageEl.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-3 rounded-lg shadow-lg hidden';
+                document.body.appendChild(messageEl);
+            }
+            
+            messageEl.textContent = text;
+            messageEl.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-blue-100', 'text-blue-800', 'bg-red-100', 'text-red-800');
+            
+            switch (type) {
+                case 'success':
+                    messageEl.classList.add('bg-green-100', 'text-green-800');
+                    break;
+                case 'error':
+                    messageEl.classList.add('bg-red-100', 'text-red-800');
+                    break;
+                default:
+                    messageEl.classList.add('bg-blue-100', 'text-blue-800');
+            }
+            
+            messageEl.classList.remove('hidden');
+            setTimeout(() => messageEl.classList.add('hidden'), 3000);
+        }
+
+        // 格式化日期
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+            
+            if (diffMins < 60) {
+                return `${diffMins}分钟前`;
+            } else if (diffHours < 24) {
+                return `${diffHours}小时前`;
+            } else if (diffDays < 30) {
+                return `${diffDays}天前`;
+            } else {
+                return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+            }
+        }
+
+        // 初始化用户系统
+        async function initUserSystem() {
+            // 从localStorage获取当前用户信息
+            const user = localStorage.getItem('currentUser');
+            if (user) {
+                currentUser = JSON.parse(user);
+                
+                // 更新页面上的用户头像
+                const userAvatar = document.getElementById('user-avatar');
+                if (userAvatar) {
+                    userAvatar.src = currentUser.avatar || './images/user.jpg';
+                }
+                
+                // 显示用户菜单
+                const userInfo = document.getElementById('user-info');
+                const authLinks = document.getElementById('auth-links');
+                if (userInfo && authLinks) {
+                    userInfo.classList.remove('hidden');
+                    authLinks.classList.add('hidden');
+                }
+            }
+        }
+
+        // 9. 事件绑定与初始化
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // 初始化数据库和用户系统
+                await initDB();
+                await initUserSystem();
+                
+                // 加载资源并渲染
+                await loadResources();
+                renderNewUploads();
+                renderPopularResources();
+                
+                // 导航栏滚动效果
+                window.addEventListener('scroll', () => {
+                    const navbar = document.getElementById('navbar');
+                    if (window.scrollY > 50) {
+                        navbar.classList.add('py-2', 'shadow-lg');
+                        navbar.classList.remove('py-3', 'shadow-md');
+                    } else {
+                        navbar.classList.add('py-3', 'shadow-md');
+                        navbar.classList.remove('py-2', 'shadow-lg');
+                    }
+                });
+                
+                // 键盘事件处理
+                document.addEventListener('keydown', (e) => {
+                    // ESC键关闭模态框
+                    if (e.key === 'Escape') {
+                        // 关闭所有可能打开的模态框
+                        document.getElementById('login-modal')?.classList.add('hidden');
+                        document.getElementById('register-modal')?.classList.add('hidden');
+                        document.getElementById('upload-modal')?.classList.add('hidden');
+                        document.getElementById('resource-detail-modal')?.classList.add('hidden');
+                        document.getElementById('profile-modal')?.classList.add('hidden');
+                        document.getElementById('search-results')?.classList.add('hidden');
+                        document.body.style.overflow = '';
+                    }
+                    
+                    // Ctrl+K 或 Cmd+K 聚焦到搜索框
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                        e.preventDefault();
+                        const searchInput = document.getElementById('search-input');
+                        if (searchInput) {
+                            searchInput.focus();
+                        }
+                    }
+                    
+                    // / 聚焦到搜索框
+                    if (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                        e.preventDefault();
+                        const searchInput = document.getElementById('search-input');
+                        if (searchInput) {
+                            searchInput.focus();
+                        }
+                    }
+                });
+                
+                // 移动端菜单切换
+                document.getElementById('menu-toggle').addEventListener('click', () => {
+                    document.getElementById('mobile-menu').classList.toggle('hidden');
+                });
+                
+                // 用户菜单切换
+                document.getElementById('user-menu-button').addEventListener('click', () => {
+                    document.getElementById('user-menu').classList.toggle('hidden');
+                });
+                
+                // 点击外部关闭用户菜单
+                document.addEventListener('click', (e) => {
+                    const menuBtn = document.getElementById('user-menu-button');
+                    const menu = document.getElementById('user-menu');
+                    if (!menuBtn.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.add('hidden');
+                    }
+                });
+                
+                // 登录/注册模态框控制
+                document.getElementById('login-link').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('login-modal').classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                });
+                
+                document.getElementById('register-link').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('register-modal').classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                });
+                
+                document.getElementById('mobile-login-link').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('login-modal').classList.remove('hidden');
+                    document.getElementById('mobile-menu').classList.add('hidden');
+                    document.body.style.overflow = 'hidden';
+                });
+                
+                document.getElementById('close-login-modal').addEventListener('click', () => {
+                    document.getElementById('login-modal').classList.add('hidden');
+                    document.body.style.overflow = '';
+                });
+                
+                document.getElementById('close-register-modal').addEventListener('click', () => {
+                    document.getElementById('register-modal').classList.add('hidden');
+                    document.body.style.overflow = '';
+                });
+                
+                document.getElementById('switch-to-login').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('register-modal').classList.add('hidden');
+                    document.getElementById('login-modal').classList.remove('hidden');
+                });
+                
+                document.getElementById('switch-to-register').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('login-modal').classList.add('hidden');
+                    document.getElementById('register-modal').classList.remove('hidden');
+                });
+                
+                // 注册表单提交
+                document.getElementById('submit-register').addEventListener('click', async () => {
+                    const username = document.getElementById('register-username').value.trim();
+                    const email = document.getElementById('register-email').value.trim();
+                    const password = document.getElementById('register-password').value;
+                    const confirm = document.getElementById('register-confirm').value;
+                    
+                    let isValid = true;
+                    
+                    // 验证用户名
+                    if (username.length < 3) {
+                        document.getElementById('username-error').textContent = '用户名长度不足3位';
+                        document.getElementById('username-error').classList.remove('hidden');
+                        isValid = false;
+                    } else {
+                        document.getElementById('username-error').classList.add('hidden');
+                    }
+                    
+                    // 验证邮箱
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email)) {
+                        document.getElementById('email-error').classList.remove('hidden');
+                        isValid = false;
+                    } else {
+                        document.getElementById('email-error').classList.add('hidden');
+                    }
+                    
+                    // 验证密码
+                    if (password.length < 6) {
+                        document.getElementById('password-error').classList.remove('hidden');
+                        isValid = false;
+                    } else {
+                        document.getElementById('password-error').classList.add('hidden');
+                    }
+                    
+                    // 验证确认密码
+                    if (password !== confirm) {
+                        document.getElementById('confirm-error').classList.remove('hidden');
+                        isValid = false;
+                    } else {
+                        document.getElementById('confirm-error').classList.add('hidden');
+                    }
+                    
+                    if (isValid) {
+                        const result = await registerUser(username, email, password);
+                        if (result.success) {
+                            document.getElementById('register-modal').classList.add('hidden');
+                            document.getElementById('new-user-id').textContent = result.user.id;
+                            document.getElementById('register-success-modal').classList.remove('hidden');
+                        } else if (result.reason === 'username') {
+                            document.getElementById('username-error').textContent = '用户名已存在';
+                            document.getElementById('username-error').classList.remove('hidden');
+                        } else {
+                            showMessage('注册失败，请稍后重试', 'error');
+                        }
+                    }
+                });
+                
+                // 注册成功确认
+                document.getElementById('got-it-register').addEventListener('click', () => {
+                    document.getElementById('register-success-modal').classList.add('hidden');
+                    document.body.style.overflow = '';
+                });
+                
+                // 登录表单提交
+                document.getElementById('submit-login').addEventListener('click', async () => {
+                    const username = document.getElementById('login-username').value.trim();
+                    const password = document.getElementById('login-password').value;
+                    
+                    if (!username || !password) {
+                        showMessage('请输入用户名和密码', 'error');
+                        return;
+                    }
+                    
+                    const result = await loginUser(username, password);
+                    if (result.success) {
+                        document.getElementById('login-modal').classList.add('hidden');
+                        document.body.style.overflow = '';
+                        showMessage('登录成功', 'success');
+                    } else {
+                        document.getElementById('login-error').classList.remove('hidden');
+                    }
+                });
+                
+                // 登出
+                document.getElementById('logout-link').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    logoutUser();
+                    document.getElementById('user-menu').classList.add('hidden');
+                });
+                
+                // 上传资源模态框
+                document.getElementById('upload-button').addEventListener('click', () => {
+                    document.getElementById('upload-modal').classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                });
+                
+                document.getElementById('close-upload-modal').addEventListener('click', () => {
+                    document.getElementById('upload-modal').classList.add('hidden');
+                    document.body.style.overflow = '';
+                });
+                
+                // 文件上传区域点击事件
+                document.getElementById('file-upload-area').addEventListener('click', () => {
+                    document.getElementById('resource-file').click();
+                });
+                
+                // 处理文件选择
+                document.getElementById('resource-file').addEventListener('change', async (e) => {
+                    if (e.target.files.length > 0) {
+                        await handleFileUpload(e.target.files[0]);
+                    }
+                });
+                
+                // 图片上传区域点击事件
+                document.getElementById('image-upload-area').addEventListener('click', () => {
+                    document.getElementById('preview-image').click();
+                });
+                
+                // 处理图片选择
+                document.getElementById('preview-image').addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        const file = e.target.files[0];
+                        const reader = new FileReader();
+                        
+                        reader.onload = (event) => {
+                            document.getElementById('selected-image').src = event.target.result;
+                            document.getElementById('preview-image-container').classList.remove('hidden');
+                        };
+                        
+                        reader.readAsDataURL(file);
+                    }
+                });
+                
+                // 提交上传
+                document.getElementById('submit-upload').addEventListener('click', async () => {
+                    const fileInput = document.getElementById('resource-file');
+                    if (fileInput.files.length === 0) {
+                        showMessage('请选择要上传的资源文件', 'error');
+                        return;
+                    }
+                    
+                    if (!currentUser) {
+                        // 未登录状态下也允许上传，但标记为匿名
+                        await handleFileUpload(fileInput.files[0]);
+                    } else {
+                        await handleFileUpload(fileInput.files[0]);
+                    }
+                });
+                
+                // 关闭资源详情模态框
+                document.getElementById('close-resource-modal').addEventListener('click', () => {
+                    document.getElementById('resource-detail-modal').classList.add('hidden');
+                    document.body.style.overflow = '';
+                });
+                
+                // 收藏资源（详情页）
+                document.getElementById('favorite-resource').addEventListener('click', () => {
+                    const resourceId = document.getElementById('download-resource').getAttribute('data-resource-id');
+                    toggleFavorite(resourceId, document.getElementById('favorite-resource'));
+                });
+                
+                // 下载资源
+                document.addEventListener('click', (e) => {
+                    if (e.target.closest('.resource-download')) {
+                        const btn = e.target.closest('.resource-download');
+                        const resourceId = btn.getAttribute('data-resource-id');
+                        
+                        // 查找资源
+                        const resource = allResources.find(r => r.id === resourceId);
+                        if (resource) {
+                            // 模拟下载
+                            showMessage(`正在下载 ${resource.name}...`, 'info');
+                            
+                            // 更新下载次数
+                            updateDownloadCount(resourceId);
+                        }
+                    }
+                });
+                
+                // 更新下载次数
+                async function updateDownloadCount(resourceId) {
+                    if (!db) return;
+                    
+                    const tx = db.transaction(['resources'], 'readwrite');
+                    const store = tx.objectStore('resources');
+                    const resource = await new Promise(resolve => {
+                        store.get(resourceId).onsuccess = e => resolve(e.target.result);
+                    });
+                    
+                    if (resource) {
+                        resource.downloads = (resource.downloads || 0) + 1;
+                        store.put(resource);
+                        
+                        // 更新内存中的数据
+                        const index = allResources.findIndex(r => r.id === resourceId);
+                        if (index !== -1) {
+                            allResources[index].downloads = resource.downloads;
+                        }
+                        
+                        // 更新UI
+                        const countEl = document.getElementById('download-count');
+                        if (countEl) countEl.textContent = resource.downloads;
+                    }
+                }
+                
+                // 发表评论
+                document.getElementById('submit-comment').addEventListener('click', () => {
+                    const resourceId = document.getElementById('download-resource').getAttribute('data-resource-id');
+                    const content = document.getElementById('comment-input').value.trim();
+                    submitComment(resourceId, content);
+                });
+                
+                // 删除评论
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-comment')) {
+                        const commentId = e.target.dataset.commentId;
+                        const resourceId = document.getElementById('download-resource').getAttribute('data-resource-id');
+                        deleteComment(commentId, resourceId);
+                    }
+                    
+                    // 编辑评论
+                    if (e.target.classList.contains('edit-comment')) {
+                        const commentId = e.target.dataset.commentId;
+                        const downloadResourceElement = document.getElementById('download-resource');
+                        if (!downloadResourceElement) {
+                            console.error('无法找到下载资源元素');
+                            return;
+                        }
+                        const resourceId = downloadResourceElement.getAttribute('data-resource-id');
+                        const currentContent = e.target.dataset.commentContent;
+                        
+                        // 创建编辑表单
+                        // 使用自定义模态框替换prompt
+                        showEditCommentModal(currentContent, (newContent) => {
+                            if (newContent !== null && newContent.trim() !== '' && newContent !== currentContent) {
+                                editComment(commentId, resourceId, newContent.trim());
+                            }
+                        });
+                    }
+                    
+                    // 回复评论 - 显示回复表单
+                    if (e.target.classList.contains('reply-comment')) {
+                        const commentId = e.target.dataset.commentId;
+                        const commentAuthor = e.target.dataset.commentAuthor;
+                        
+                        // 隐藏所有回复表单
+                        document.querySelectorAll('.reply-form').forEach(form => {
+                            form.classList.add('hidden');
+                        });
+                        
+                        // 显示当前回复表单
+                        const replyForm = e.target.closest('.comment-item').querySelector('.reply-form');
+                        if (replyForm) {
+                            replyForm.classList.remove('hidden');
+                            
+                            // 设置占位符
+                            const replyInput = replyForm.querySelector('.reply-input');
+                            if (replyInput) {
+                                replyInput.placeholder = `回复 ${commentAuthor}...`;
+                                replyInput.focus();
+                            } else {
+                                console.error('找不到回复输入框');
+                            }
+                        } else {
+                            console.error('找不到回复表单');
+                        }
+                    }
+                    
+                    // 提交回复
+                    if (e.target.classList.contains('submit-reply')) {
+                        const commentId = e.target.dataset.commentId;
+                        const downloadResourceElement = document.getElementById('download-resource');
+                        if (!downloadResourceElement) {
+                            console.error('无法找到下载资源元素');
+                            return;
+                        }
+                        const resourceId = downloadResourceElement.getAttribute('data-resource-id');
+                        const replyForm = e.target.closest('.reply-form');
+                        if (!replyForm) {
+                            console.error('无法找到回复表单');
+                            return;
+                        }
+                        const replyInput = replyForm.querySelector('.reply-input');
+                        if (!replyInput) {
+                            console.error('无法找到回复输入框');
+                            return;
+                        }
+                        const content = replyInput.value.trim();
+                        
+                        if (content) {
+                            replyComment(commentId, resourceId, content);
+                            replyInput.value = '';
+                            replyForm.classList.add('hidden');
+                        }
+                    }
+                });
+                
+                // 搜索功能
+                const searchButton = document.getElementById('search-button');
+                if (searchButton) {
+                    searchButton.addEventListener('click', () => {
+                        const query = document.getElementById('search-input').value.trim();
+                        performSearch(query);
+                    });
+                } else {
+                    console.error('找不到ID为search-button的元素');
+                }
+                
+                // 已移除对hero-search-button的引用，使用search-button
+                // const heroSearchButton = document.getElementById('hero-search-button');
+                // if (heroSearchButton) {
+                //     heroSearchButton.addEventListener('click', () => {
+                //         const query = document.getElementById('hero-search-input').value.trim();
+                //         performSearch(query);
+                //     });
+                // } else {
+                //     console.error('找不到ID为hero-search-button的元素');
+                // }
+                
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            const query = e.target.value.trim();
+                            performSearch(query);
+                        }
+                    });
+                } else {
+                    console.error('找不到ID为search-input的元素');
+                }
+                
+                // 已移除对hero-search-input的引用，使用search-input
+                // const heroSearchInput = document.getElementById('hero-search-input');
+                // if (heroSearchInput) {
+                //     heroSearchInput.addEventListener('keypress', (e) => {
+                //         if (e.key === 'Enter') {
+                //             const query = e.target.value.trim();
+                //             performSearch(query);
+                //         }
+                //     });
+                // } else {
+                //     console.error('找不到ID为hero-search-input的元素');
+                // }
+                
+                const closeSearchBtn = document.getElementById('close-search');
+                const searchResults = document.getElementById('search-results');
+                if (closeSearchBtn && searchResults) {
+                    closeSearchBtn.addEventListener('click', () => {
+                        searchResults.classList.add('hidden');
+                    });
+                } else {
+                    if (!closeSearchBtn) console.error('找不到ID为close-search的元素');
+                    if (!searchResults) console.error('找不到ID为search-results的元素');
+                }
+                
+                
+                
+                // 个人资料链接点击事件
+                const profileLink = document.getElementById('profile-link');
+                if (profileLink) {
+                    profileLink.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        if (currentUser) {
+                            openProfileModal();
+                        } else {
+                            showMessage('请先登录', 'error');
+                        }
+                    });
+                } else {
+                    console.error('找不到ID为profile-link的元素');
+                }
+                
+                // 确保closeProfileModal函数存在后再添加事件监听器
+                const closeProfileModalBtn = document.getElementById('close-profile-modal');
+                if (closeProfileModalBtn) {
+                    closeProfileModalBtn.addEventListener('click', closeProfileModal);
+                } else {
+                    console.error('找不到ID为close-profile-modal的元素');
+                }
+                
+            } catch (error) {
+                console.error('初始化失败:', error);
+                showMessage('网站加载失败，请刷新页面重试', 'error');
+            }
+        });
+        
+        // 打开个人资料模态框
+        function openProfileModal() {
+            if (!currentUser) return;
+            
+            // 填充用户信息
+            const profileUsername = document.getElementById('profile-username');
+            const profileUserId = document.getElementById('profile-user-id');
+            const profileEmail = document.getElementById('profile-email');
+            const profileAvatar = document.getElementById('profile-avatar');
+            
+            if (profileUsername) {
+                profileUsername.textContent = currentUser.username;
+            } else {
+                console.error('找不到ID为profile-username的元素');
+            }
+            
+            if (profileUserId) {
+                profileUserId.textContent = currentUser.id;
+            } else {
+                console.error('找不到ID为profile-user-id的元素');
+            }
+            
+            if (profileEmail) {
+                profileEmail.value = currentUser.email || '';
+            } else {
+                console.error('找不到ID为profile-email的元素');
+            }
+            
+            if (profileAvatar) {
+                profileAvatar.src = currentUser.avatar || './images/user.jpg';
+            } else {
+                console.error('找不到ID为profile-avatar的元素');
+            }
+            
+            // 显示模态框
+            document.getElementById('profile-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // 关闭个人资料模态框
+        function closeProfileModal() {
+            const profileModal = document.getElementById('profile-modal');
+            if (profileModal) {
+                profileModal.classList.add('hidden');
+            } else {
+                console.error('找不到ID为profile-modal的元素');
+            }
+            document.body.style.overflow = '';
+        }
+        
+        // 显示编辑评论模态框
+        function showEditCommentModal(currentContent, callback) {
+            // 创建模态框元素
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                    <h3 class="text-lg font-semibold mb-4">编辑评论</h3>
+                    <textarea id="edit-comment-textarea" class="w-full h-32 p-2 border border-gray-300 rounded-lg resize-none" placeholder="请输入评论内容">${currentContent}</textarea>
+                    <div class="flex justify-end space-x-3 mt-4">
+                        <button id="cancel-edit-comment" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">取消</button>
+                        <button id="confirm-edit-comment" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">确定</button>
+                    </div>
+                </div>
+            `;
+            
+            // 添加到页面
+            document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
+            
+            // 获取元素
+            const textarea = document.getElementById('edit-comment-textarea');
+            const cancelBtn = document.getElementById('cancel-edit-comment');
+            const confirmBtn = document.getElementById('confirm-edit-comment');
+            
+            // 聚焦到文本框
+            if (textarea) {
+                textarea.focus();
+                textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+            }
+            
+            // 事件处理
+            const close = () => {
+                document.body.removeChild(modal);
+                document.body.style.overflow = '';
+            };
+            
+            cancelBtn?.addEventListener('click', () => {
+                close();
+                callback(null);
+            });
+            
+            confirmBtn?.addEventListener('click', () => {
+                const newContent = textarea?.value || '';
+                close();
+                callback(newContent);
+            });
+            
+            textarea?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    const newContent = textarea?.value || '';
+                    close();
+                    callback(newContent);
+                }
+            });
+        }
+        
+        // 头像上传区域点击事件
+        const avatarUploadArea = document.getElementById('avatar-upload-area');
+        if (avatarUploadArea) {
+            avatarUploadArea.addEventListener('click', () => {
+                const avatarFile = document.getElementById('avatar-file');
+                if (avatarFile) {
+                    avatarFile.click();
+                } else {
+                    console.error('找不到ID为avatar-file的元素');
+                }
+            });
+        } else {
+            console.error('找不到ID为avatar-upload-area的元素');
+        }
+        
+        // 处理头像选择
+        const avatarFile = document.getElementById('avatar-file');
+        if (avatarFile) {
+            avatarFile.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    
+                    // 检查文件类型
+                    if (!file.type.startsWith('image/')) {
+                        showMessage('请选择图片文件', 'error');
+                        return;
+                    }
+                    
+                    // 检查文件大小（限制为2MB）
+                    if (file.size > 2 * 1024 * 1024) {
+                        showMessage('图片大小不能超过2MB', 'error');
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    
+                    reader.onload = async (event) => {
+                        // 更新头像预览
+                        const profileAvatar = document.getElementById('profile-avatar');
+                        if (profileAvatar) {
+                            profileAvatar.src = event.target.result;
+                        } else {
+                            console.error('找不到ID为profile-avatar的元素');
+                        }
+                        
+                        // 更新用户头像
+                        if (currentUser) {
+                            try {
+                                // 导入用户API模块
+                                const { updateUserInfo } = await import('./js/auth-api.js');
+                                
+                                // 更新用户信息
+                                const updatedUser = await updateUserInfo({
+                                    id: currentUser.id,
+                                    email: currentUser.email,
+                                    avatar: event.target.result
+                                });
+                                
+                                // 更新本地存储
+                                currentUser = updatedUser;
+                                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                                
+                                // 更新页面上的用户头像
+                                const userAvatar = document.getElementById('user-avatar');
+                                const currentUserAvatar = document.getElementById('current-user-avatar');
+                                
+                                if (userAvatar) {
+                                    userAvatar.src = event.target.result;
+                                } else {
+                                    console.error('找不到ID为user-avatar的元素');
+                                }
+                                
+                                if (currentUserAvatar) {
+                                    currentUserAvatar.src = event.target.result;
+                                } else {
+                                    console.error('找不到ID为current-user-avatar的元素');
+                                }
+                                
+                                showMessage('头像更新成功', 'success');
+                            } catch (error) {
+                                console.error('更新头像失败:', error);
+                                showMessage('头像更新失败，请重试', 'error');
+                            }
+                        }
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+        } else {
+            console.error('找不到ID为avatar-file的元素');
+        }
+        
+        // 保存个人资料
+        const saveProfile = document.getElementById('save-profile');
+        if (saveProfile) {
+            saveProfile.addEventListener('click', () => {
+                if (!currentUser) return;
+                
+                const profileEmail = document.getElementById('profile-email');
+                if (profileEmail) {
+                    const email = profileEmail.value.trim();
+                    
+                    // 简单的邮箱验证
+                    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                        showMessage('请输入有效的邮箱地址', 'error');
+                        return;
+                    }
+                    
+                    // 更新用户信息
+                    currentUser.email = email;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    // 更新页面上的用户邮箱
+                    profileEmail.value = email;
+                    
+                    showMessage('个人资料保存成功', 'success');
+                } else {
+                    console.error('找不到ID为profile-email的元素');
+                }
+            });
+        } else {
+            console.error('找不到ID为save-profile的元素');
+        }
+        
+        // 筛选功能实现
+        function applyFilters() {
+            // 这里应该实现筛选逻辑
+            showMessage('筛选已应用', 'success');
+            // 实际项目中这里会根据筛选条件重新渲染资源列表
+        }
+        
+        // 为筛选面板中的复选框添加事件监听器
+        document.querySelectorAll('#filter-types input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', applyFilters);
+        });
+        
+        document.querySelectorAll('#filter-versions input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', applyFilters);
+        });
+        
+        // 本地用户注册实现
+        async function registerUserLocally(username, email, password) {
+            try {
+                if (!db) await initDB();
+                
+                // 检查用户名和邮箱是否已存在
+                const tx = db.transaction(['users'], 'readonly');
+                const store = tx.objectStore('users');
+                
+                // 获取所有用户检查重复
+                const allUsers = await new Promise(resolve => {
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => resolve([]);
+                });
+                
+                // 模拟密码加密（简化版）
+                const hashedPassword = btoa(password); // 实际应该使用更安全的加密方式
+                
+                // 检查用户名是否存在
+                if (allUsers.some(user => user.username === username)) {
+                    return { success: false, message: '用户名已存在' };
+                }
+                
+                // 检查邮箱是否存在
+                if (allUsers.some(user => user.email === email)) {
+                    return { success: false, message: '邮箱已被注册' };
+                }
+                
+                // 创建新用户
+                const newUser = {
+                    id: Date.now().toString(),
+                    username,
+                    email,
+                    password: hashedPassword,
+                    registerDate: new Date().toISOString(),
+                    favorites: []
+                };
+                
+                // 保存用户到数据库
+                const writeTx = db.transaction(['users'], 'readwrite');
+                writeTx.objectStore('users').add(newUser);
+                
+                await new Promise(resolve => {
+                    writeTx.oncomplete = resolve;
+                    writeTx.onerror = () => {
+                        throw new Error('保存用户失败');
+                    };
+                });
+                
+                // 创建令牌（简化版）
+                const token = btoa(`${username}:${Date.now()}`);
+                
+                // 保存到localStorage
+                const userToStore = { ...newUser };
+                delete userToStore.password; // 不保存密码
+                localStorage.setItem('currentUser', JSON.stringify(userToStore));
+                localStorage.setItem('token', token);
+                
+                return { success: true, user: userToStore };
+            } catch (error) {
+                console.error('注册失败:', error);
+                return { success: false, message: error.message || '注册失败，请稍后重试' };
+            }
+        }
+        
+        // 本地用户登录实现
+        async function loginUserLocally(username, password) {
+            try {
+                if (!db) await initDB();
+                
+                // 模拟密码加密
+                const hashedPassword = btoa(password);
+                
+                // 查找用户
+                const tx = db.transaction(['users'], 'readonly');
+                const store = tx.objectStore('users');
+                
+                const allUsers = await new Promise((resolve) => {
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => resolve([]);
+                });
+                
+                // 查找匹配的用户
+                const user = allUsers.find(u => u.username === username && u.password === hashedPassword);
+                
+                if (!user) {
+                    return { success: false, message: '用户名或密码错误' };
+                }
+                
+                // 创建令牌
+                const token = btoa(`${username}:${Date.now()}`);
+                
+                // 保存到localStorage
+                const userToStore = { ...user };
+                delete userToStore.password;
+                localStorage.setItem('currentUser', JSON.stringify(userToStore));
+                localStorage.setItem('token', token);
+                
+                return { success: true, user: userToStore };
+            } catch (error) {
+                console.error('登录失败:', error);
+                return { success: false, message: error.message || '登录失败，请稍后重试' };
+            }
+        }
+        
+    </script>
+</body>
+</html>
